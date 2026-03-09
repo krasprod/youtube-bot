@@ -62,9 +62,25 @@ def _prepare_cookies() -> Optional[str]:
     if not YOUTUBE_COOKIES:
         return None
     
+    # Решаем проблему некорректного копирования (когда табы заменяются на пробелы в Render)
+    lines = YOUTUBE_COOKIES.strip().split('\n')
+    fixed_lines = ["# Netscape HTTP Cookie File", "# https://curl.haxx.se/rfc/cookie_spec.html", "# This is a generated file! Do not edit.", ""]
+    
+    for line in lines:
+        line = line.strip()
+        if line.startswith('#') or not line:
+            continue
+        parts = line.split()
+        if len(parts) >= 7:
+            fixed_line = "\t".join(parts[:6]) + "\t" + " ".join(parts[6:])
+            fixed_lines.append(fixed_line)
+        else:
+            fixed_lines.append(line)
+            
     cookies_path = os.path.join(DOWNLOAD_DIR, "yt_cookies.txt")
     with open(cookies_path, "w", encoding="utf-8") as f:
-        f.write(YOUTUBE_COOKIES)
+        f.write("\n".join(fixed_lines) + "\n")
+        
     return cookies_path
 
 
