@@ -13,6 +13,7 @@ import yt_dlp
 from config import (
     BOT_TOKEN, MAX_FILE_SIZE, DOWNLOAD_DIR,
     YTDLP_VIDEO_OPTIONS, YTDLP_AUDIO_OPTIONS,
+    YOUTUBE_COOKIES
 )
 
 # Логирование
@@ -56,11 +57,29 @@ def cleanup_files(video_id: str) -> None:
             logger.warning(f"Не удалось удалить {filepath}: {e}")
 
 
+def _prepare_cookies() -> Optional[str]:
+    """Если есть переменная YOUTUBE_COOKIES, сохраняет её в файл и возвращает путь."""
+    if not YOUTUBE_COOKIES:
+        return None
+    
+    cookies_path = os.path.join(DOWNLOAD_DIR, "yt_cookies.txt")
+    with open(cookies_path, "w", encoding="utf-8") as f:
+        f.write(YOUTUBE_COOKIES)
+    return cookies_path
+
+
 def download_video(url: str) -> dict:
     """Скачивает видео с YouTube."""
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
     info_opts = {**YTDLP_VIDEO_OPTIONS, "skip_download": True}
+    dl_opts = {**YTDLP_VIDEO_OPTIONS}
+    
+    cookies_path = _prepare_cookies()
+    if cookies_path:
+        info_opts["cookiefile"] = cookies_path
+        dl_opts["cookiefile"] = cookies_path
+
     with yt_dlp.YoutubeDL(info_opts) as ydl:
         info = ydl.extract_info(url, download=False)
 
@@ -68,8 +87,12 @@ def download_video(url: str) -> dict:
     title = info.get("title", "Видео")
     duration = info.get("duration", 0)
 
-    with yt_dlp.YoutubeDL(YTDLP_VIDEO_OPTIONS) as ydl:
+    with yt_dlp.YoutubeDL(dl_opts) as ydl:
         ydl.download([url])
+
+    # Очищаем временный файл куков
+    if cookies_path and os.path.exists(cookies_path):
+        os.remove(cookies_path)
 
     pattern = os.path.join(DOWNLOAD_DIR, f"{video_id}.*")
     files = glob.glob(pattern)
@@ -95,6 +118,14 @@ def download_audio(url: str) -> dict:
     info_opts = {**YTDLP_AUDIO_OPTIONS, "skip_download": True}
     # Убираем postprocessors для info-запроса
     info_opts.pop("postprocessors", None)
+    
+    dl_opts = {**YTDLP_AUDIO_OPTIONS}
+    
+    cookies_path = _prepare_cookies()
+    if cookies_path:
+        info_opts["cookiefile"] = cookies_path
+        dl_opts["cookiefile"] = cookies_path
+
     with yt_dlp.YoutubeDL(info_opts) as ydl:
         info = ydl.extract_info(url, download=False)
 
@@ -102,8 +133,12 @@ def download_audio(url: str) -> dict:
     title = info.get("title", "Аудио")
     duration = info.get("duration", 0)
 
-    with yt_dlp.YoutubeDL(YTDLP_AUDIO_OPTIONS) as ydl:
+    with yt_dlp.YoutubeDL(dl_opts) as ydl:
         ydl.download([url])
+
+    # Очищаем временный файл куков
+    if cookies_path and os.path.exists(cookies_path):
+        os.remove(cookies_path)
 
     # Ищем mp3 файл
     pattern = os.path.join(DOWNLOAD_DIR, f"{video_id}.mp3")

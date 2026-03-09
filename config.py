@@ -6,6 +6,9 @@ load_dotenv()
 # Telegram Bot Token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# YouTube Cookies (текст из cookies.txt)
+YOUTUBE_COOKIES = os.getenv("YOUTUBE_COOKIES")
+
 # Максимальный размер файла для Telegram (50 МБ)
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB в байтах
 
