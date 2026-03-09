@@ -20,19 +20,6 @@ DOWNLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "downloa
 _local_ffmpeg = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ffmpeg.exe")
 FFMPEG_PATH = _local_ffmpeg if os.path.exists(_local_ffmpeg) else "ffmpeg"
 
-# Общие настройки yt-dlp
-_BASE_OPTIONS = {
-    "outtmpl": os.path.join(DOWNLOAD_DIR, "%(id)s.%(ext)s"),
-    "noplaylist": True,
-    "quiet": True,
-    "no_warnings": True,
-    "extractor_args": {"youtube": {"player_client": ["android"]}},
-    "socket_timeout": 30,
-    "retries": 3,
-    "noprogress": True,
-    "ffmpeg_location": FFMPEG_PATH,
-}
-
 # Настройки для скачивания видео
 YTDLP_VIDEO_OPTIONS = {
     **_BASE_OPTIONS,
